@@ -13,7 +13,7 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Your first React Native app is running</Text>
       
       <TouchableOpacity style={styles.button} onPress={handlePress}>
-        <Text style={styles.buttonText}>Tap me!</Text>
+        <Text style={styles.buttonText}>Will update on more development!</Text>
       </TouchableOpacity>
       
       <View style={styles.infoContainer}>
