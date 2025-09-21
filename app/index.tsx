@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import React from 'react';
 
 export default function HomeScreen() {
   const handlePress = () => {
@@ -23,6 +24,7 @@ export default function HomeScreen() {
         <Text style={styles.infoText}>
           📱 Try opening this in the Expo Go app on your phone
         </Text>
+        <Text>Trying to set up api for cursor to add features.</Text>
       </View>
     </View>
   );
