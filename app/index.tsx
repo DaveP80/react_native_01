@@ -24,7 +24,7 @@ export default function HomeScreen() {
         <Text style={styles.infoText}>
           📱 Try opening this in the Expo Go app on your phone
         </Text>
-        <Text>Trying to set up api for cursor to add features.</Text>
+        <Text>Trying to set up api for cursor to add features. finally made the openai cursor helper work!</Text>
       </View>
     </View>
   );
