@@ -24,6 +24,7 @@ export default function HomeScreen() {
         <Text style={styles.infoText}>
           📱 Try opening this in the Expo Go app on your phone
         </Text>
+        <Text>The next feature to add is profile page customization.</Text>
       </View>
     </View>
   );
