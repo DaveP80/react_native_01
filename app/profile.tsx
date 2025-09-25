@@ -1,7 +1,27 @@
-import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, Image } from 'react-native';
 
-export default function ProfileScreen() {
+const ProfileScreen = () => {
+  const [user, setUser] = useState({ name: '' });
+
+  const handleLogin = () => {
+    setUser({ name: 'John Doe' });
+  };
+
+  const handleSignup = () => {
+    setUser({ name: 'Jane Doe' });
+  };
+
+  if (!user.name) {
+    return (
+      <View>
+        <Text>Please log in or sign up to view your profile.</Text>
+        <Button title="Log In" onPress={handleLogin} />
+        <Button title="Sign Up" onPress={handleSignup} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Image
@@ -13,7 +33,10 @@ export default function ProfileScreen() {
       />
     </View>
   );
-}
+};
+
+export default ProfileScreen;
+
 
 const styles = StyleSheet.create({
   container: {
