@@ -1,15 +1,17 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
 
 const ProfileScreen = () => {
   const [user, setUser] = useState({ name: '' });
+  const router = useRouter();
 
   const handleLogin = () => {
-    setUser({ name: 'John Doe' });
+    router.push("/auth?mode=login");
   };
 
   const handleSignup = () => {
-    setUser({ name: 'Jane Doe' });
+    router.push("/auth?mode=signup");
   };
 
   if (!user.name) {
