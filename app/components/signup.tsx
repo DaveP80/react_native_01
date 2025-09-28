@@ -28,6 +28,7 @@ const Signup = () => {
 
   return (
     <View style={styles.container}>
+    Please sign up with a valid email and strong password!
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
@@ -45,7 +46,7 @@ const Signup = () => {
         onChangeText={setPassword}
         placeholder="Enter your password"
       />
-      <Button title={loading ? "Logging in..." : "Login"} onPress={handleSignup} disabled={loading} />
+      <Button title={loading ? "Signing up..." : "Sign up"} onPress={handleSignup} disabled={loading} />
     </View>
   );
 };
