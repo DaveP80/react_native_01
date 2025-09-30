@@ -2,18 +2,27 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { AuthProvider } from './context/AuthContext';
 
-export default function RootLayout() {
+import type { ReactNode } from 'react';
+
+interface RootLayoutProps {
+  children: ReactNode;
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   useFrameworkReady();
 
   return (
-    <>
+    <AuthProvider>
+      {children}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
       <Navbar/>
-    </>
+    </AuthProvider>
+    
   );
 }
 
