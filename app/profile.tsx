@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
+import { useAuth } from './context/AuthContext';
 
 const ProfileScreen = () => {
-  const [user, setUser] = useState({ name: '' });
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   const handleLogin = () => {
     router.push("/auth?mode=login");
@@ -28,7 +29,7 @@ const ProfileScreen = () => {
     <View style={styles.container}>
       <Image
         source={{
-          uri: 'https://randomuser.me/api/portraits/men/1.jpg', // Stock user image
+          uri: 'https://randomuser.me/api/portraits/men/1.jpg', 
         }}
         style={styles.avatar}
         resizeMode="cover"

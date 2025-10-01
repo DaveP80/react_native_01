@@ -22,9 +22,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <StatusBar style="auto" />
       <Navbar/>
     </AuthProvider>
-    
   );
-}
+};
 
 function Navbar() {
   const router = useRouter();
