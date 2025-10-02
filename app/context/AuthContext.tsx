@@ -6,16 +6,29 @@ type AuthContextType = {
   logout: () => void;
 };
 
+type User = {
+  name: string;
+  email: string;
+  password: string;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = (username: string) => setUser(username);
-  const logout = () => setUser(null);
+  const login = (username: User) => setUser(username);
+  const logout = () => setUser({ name: '', email: '', password: '' });
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: user ? user.name : null,
+        login: (username: string) =>
+          setUser({ name: username, email: '', password: '' }),
+        logout: () => setUser(null),
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
