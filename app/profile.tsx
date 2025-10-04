@@ -5,7 +5,7 @@ import { useAuth } from './context/AuthContext';
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const { name, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogin = () => {
     router.push("/auth?mode=login");
@@ -15,7 +15,7 @@ const ProfileScreen = () => {
     router.push("/auth?mode=signup");
   };
 
-  if (!name) {
+  if (!user.name) {
     return (
       <View>
         <Text>Please log in or sign up to view your profile.</Text>
@@ -23,7 +23,7 @@ const ProfileScreen = () => {
         <Button title="Sign Up" onPress={handleSignup} />
       </View>
     );
-  }
+  };
 
   return (
     <View style={styles.container}>

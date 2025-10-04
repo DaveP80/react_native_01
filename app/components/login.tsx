@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -17,6 +19,7 @@ const Login = () => {
       const data = await response.json();
       if (response.ok) {
         Alert.alert('Login successful', `Welcome, ${data.user.email}!`);
+        login(data.user);
       } else {
         Alert.alert('Login failed', data.message || 'Invalid credentials');
       }

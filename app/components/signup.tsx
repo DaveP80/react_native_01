@@ -16,7 +16,7 @@ const Signup = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        Alert.alert('Login successful', `Welcome, ${data.user.email}!`);
+        Alert.alert('Signup successful', `Welcome, ${data.user.email}!`);
       } else {
         Alert.alert('Login failed', data.message || 'Invalid credentials');
       }
