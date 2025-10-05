@@ -54,7 +54,7 @@ const Login = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { padding: 20 , minHeight: '100%'},
   label: { marginTop: 10, marginBottom: 5, fontWeight: 'bold' },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 10, marginBottom: 10 },
 });

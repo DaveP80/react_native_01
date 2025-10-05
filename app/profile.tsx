@@ -19,6 +19,7 @@ const ProfileScreen = () => {
     return (
       <View>
         <Text>Please log in or sign up to view your profile.</Text>
+        <Text>New Logins and signups will require you to check your email for a login code.</Text>
         <Button title="Log In" onPress={handleLogin} />
         <Button title="Sign Up" onPress={handleSignup} />
       </View>
