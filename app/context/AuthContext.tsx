@@ -2,8 +2,10 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type AuthContextType = {
   user: User;
-  login: (user: string) => void;
+  login: (user: User) => void;
   logout: () => void;
+  newSignup: (newUser: boolean) => void;
+  newUser: boolean;
 };
 
 type User = {
@@ -16,16 +18,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [newUser, setNewUser] = useState<boolean>(false);
 
   const login = (userObj: User) => setUser(userObj);
   const logout = () => setUser({ name: '', email: '', password: '' });
-
+  const newSignup = (newValue: boolean) => setNewUser(newValue);
   return (
     <AuthContext.Provider
       value={{
         user: (user ?? { name: '', email: '', password: '' }),
-        login: (userObj: any) => setUser(userObj),
+        login,
         logout,
+        newSignup,
+        newUser,
       }}
     >
       {children}

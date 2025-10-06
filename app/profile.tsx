@@ -5,7 +5,7 @@ import { useAuth } from './context/AuthContext';
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, newUser } = useAuth();
 
   const handleLogin = () => {
     router.push("/auth?mode=login");
@@ -18,7 +18,8 @@ const ProfileScreen = () => {
   if (!user.name) {
     return (
       <View>
-        <Text>Please log in or sign up to view your profile.</Text>
+        {!newUser && <Text>Please log in or sign up to view your profile.</Text>}
+        {newUser && <Text>You have successfully signed up. Please check your email for a login code.</Text>}
         <Text>New Logins and signups will require you to check your email for a login code.</Text>
         <Button title="Log In" onPress={handleLogin} />
         <Button title="Sign Up" onPress={handleSignup} />
