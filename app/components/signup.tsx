@@ -11,21 +11,24 @@ const Signup = () => {
   const handleSignup = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://your-backend-api.com/api/login', {
+      const response = await fetch('https://httpbin.org/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
       if (response.ok) {
+        data.user.email = email;
+        data.message = 'Signup successful';
         Alert.alert('Signup successful', `Welcome, ${data.user.email}!`);
         newSignup(true);
       } else {
+        data.message = 'Signup failed';
         Alert.alert('Login failed', data.message || 'Invalid credentials');
-      }
+      };
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
-    }
+    };
     setLoading(false);
   };
 

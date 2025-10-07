@@ -6,12 +6,12 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
 
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://your-backend-api.com/api/login', {
+      const response = await fetch('https://httpbin.org/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
