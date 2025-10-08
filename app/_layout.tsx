@@ -2,7 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
-import { AuthProvider } from './context/AuthContext';
+import AuthProvider from './context/AuthContext';
 
 import type { ReactNode } from 'react';
 

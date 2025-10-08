@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'expo-router';
+import { User } from '../context/AuthContext';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { newSignup } = useAuth();
+  const router = useRouter();
 
   const handleSignup = async () => {
     setLoading(true);
@@ -16,15 +19,16 @@ const Signup = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
+      const res = await response.json();
+      const storeData: User = {name: '', email: '', password: ''};
       if (response.ok) {
-        data.user.email = email;
-        data.message = 'Signup successful';
-        Alert.alert('Signup successful', `Welcome, ${data.user.email}!`);
+        storeData.email = res.data.email;
+        storeData.name = 'bob';
+        Alert.alert('Signup successful', `Welcome, ${res.data.email}!`);
         newSignup(true);
+        router.push("/profile");
       } else {
-        data.message = 'Signup failed';
-        Alert.alert('Login failed', data.message || 'Invalid credentials');
+        Alert.alert('Signup failed');
       };
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
