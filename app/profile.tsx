@@ -14,6 +14,14 @@ const ProfileScreen = () => {
   const handleSignup = () => {
     router.push("/auth?mode=signup");
   };
+  function obfuscateEmail(email: string): string {
+    const [username, domain] = email.split('@');
+    if (!domain) return email;
+    const first = username[0];
+    const last = username[username.length - 1];
+    const stars = '*'.repeat(Math.max(username.length - 2, 1));
+    return `${first}${stars}${last}@${domain}`;
+  }
 
   if (!user.name) {
     return (
@@ -36,6 +44,7 @@ const ProfileScreen = () => {
         style={styles.avatar}
         resizeMode="cover"
       />
+      <Text>{user.email}</Text>
     </View>
   );
 };
