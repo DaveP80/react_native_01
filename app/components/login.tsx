@@ -21,21 +21,20 @@ const Login = () => {
       });
       const res = await response.json();
       const storeData: User = {name: '', email: '', password: ''};
-      console.log(res.data);
       if (response.ok) {
-        Alert.alert('Login successful', `Welcome, ${res.data.email}!`);
-        storeData.email = res.data.email;
+        storeData.email = JSON.parse(res.data).email;
         storeData.name = "bob";
         storeData.password = "********";
         login(storeData);
-        router.push("/profile")
       } else {
         Alert.alert('Login failed', 'Invalid credentials');
       }
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+      router.push("/profile")
     }
-    setLoading(false);
   };
 
   return (

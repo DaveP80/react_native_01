@@ -44,7 +44,7 @@ const ProfileScreen = () => {
         style={styles.avatar}
         resizeMode="cover"
       />
-      <Text>{user.email}</Text>
+      <Text>{obfuscateEmail(user.email)}</Text>
     </View>
   );
 };
