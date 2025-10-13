@@ -22,9 +22,8 @@ const Signup = () => {
       const res = await response.json();
       const storeData: User = {name: '', email: '', password: ''};
       if (response.ok) {
-        storeData.email = res.data.email;
+        storeData.email = JSON.parse(res.data).email;
         storeData.name = 'bob';
-        Alert.alert('Signup successful', `Welcome, ${res.data.email}!`);
         newSignup(true);
         router.push("/profile");
       } else {
@@ -32,8 +31,9 @@ const Signup = () => {
       };
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
-    };
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
