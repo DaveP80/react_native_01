@@ -45,6 +45,7 @@ const ProfileScreen = () => {
         resizeMode="cover"
       />
       <Text>{obfuscateEmail(user.email)}</Text>
+      <Button title="Logout" onPress={logout} />
     </View>
   );
 };
