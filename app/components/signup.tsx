@@ -14,16 +14,17 @@ const Signup = () => {
   const handleSignup = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://httpbin.org/post', {
+      //Devolopment server address.
+      const response = await fetch('http://localhost:3000/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, username: "bob" }),
       });
       const res = await response.json();
       const storeData: User = {name: '', email: '', password: ''};
       if (response.ok) {
         storeData.email = JSON.parse(res.data).email;
-        storeData.name = 'bob';
+        storeData.name = JSON.parse(res.data).username;
         newSignup(true);
         router.push("/profile");
       } else {
