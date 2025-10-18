@@ -109,6 +109,77 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+app.post('/login', (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email and password are required'
+        });
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+      }
+      
+      // Query database for user
+      const selectQuery = `
+        SELECT id, username, email, password 
+        FROM users 
+        WHERE email = ?
+      `;
+      
+      db.get(selectQuery, [email], (err, row) => {
+        if (err) {
+          console.error('Database error:', err.message);
+          return res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+          });
+        }
+        
+        if (!row) {
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+        
+        // Compare passwords (plain text for now)
+        if (row.password === password) {
+          res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: {
+              id: row.id,
+              username: row.username,
+              email: row.email
+            }
+          });
+        } else {
+          res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+      });
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+      });
+    }
+  });
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });
