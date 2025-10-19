@@ -23,8 +23,8 @@ const Signup = () => {
       const res = await response.json();
       const storeData: User = {name: '', email: '', password: ''};
       if (response.ok) {
-        storeData.email = JSON.parse(res.data).email;
-        storeData.name = JSON.parse(res.data).username;
+        storeData.email = JSON.parse(res).email;
+        storeData.name = JSON.parse(res).username;
         newSignup(true);
         router.push("/profile");
       } else {
