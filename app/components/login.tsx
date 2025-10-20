@@ -22,8 +22,8 @@ const Login = () => {
       const res = await response.json();
       const storeData: User = {name: '', email: '', password: ''};
       if (response.ok) {
-        storeData.email = JSON.parse(res.data).email;
-        storeData.name = "bob";
+        storeData.email = res.user.email;
+        storeData.name = res.user.username;
         storeData.password = "********";
         login(storeData);
       } else {
