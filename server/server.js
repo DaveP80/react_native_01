@@ -134,7 +134,7 @@ app.post('/login', (req, res) => {
       const selectQuery = `
         SELECT id, username, email, password 
         FROM users 
-        WHERE email = ?
+        WHERE email = $1
       `;
       
       db.get(selectQuery, [email], (err, row) => {
