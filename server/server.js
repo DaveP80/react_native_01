@@ -134,10 +134,10 @@ app.post('/login', (req, res) => {
       const selectQuery = `
         SELECT id, username, email, password 
         FROM users 
-        WHERE email = $1
+        WHERE email = ?
       `;
       
-      db.get(selectQuery, [email], (err, row) => {
+      db.get(selectQuery, [email], async (err, row) => {
         if (err) {
           console.error('Database error:', err.message);
           return res.status(500).json({
@@ -153,8 +153,8 @@ app.post('/login', (req, res) => {
           });
         }
         
-        // Compare passwords (plain text for now)
-        if (row.password === password) {
+        const passwordMatch = await bcrypt.compare(password, row.password)
+        if (passwordMatch) {
           res.status(200).json({
             success: true,
             message: 'Login successful',
