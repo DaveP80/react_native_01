@@ -36,3 +36,5 @@ yarn-error.*
 
 server/node_modules
 server/database.sqlite
+
+notes.txt

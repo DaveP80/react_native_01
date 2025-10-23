@@ -1,11 +1,21 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import { useAuth } from './context/AuthContext';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const handlePress = () => {
-    alert('Welcome to React Native! 🎉');
+    if (user.name) {
+        router.push("/uploader");
+    } else {
+
+      alert('Welcome to React Native! 🎉');
+    }
   };
+
+  const {user} = useAuth();
+  const router = useRouter();
 
   return (
     <View style={styles.container}>
@@ -14,7 +24,14 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Your first React Native app is running</Text>
       
       <TouchableOpacity style={styles.button} onPress={handlePress}>
+        { user.name ? 
+        
+        <Text style={styles.buttonText}>Add your media.</Text>
+        
+        : 
+        
         <Text style={styles.buttonText}>Will update on more development!</Text>
+        }
       </TouchableOpacity>
       
       <View style={styles.infoContainer}>
