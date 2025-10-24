@@ -3,9 +3,19 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
 
 const app = express();
+require('dotenv').config();
 const PORT = process.env.PORT || 3000;
+const CLOUDINARY_ENV = process.env.CLOUDINARY_URL
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: CLOUDINARY_ENV.slice(-9),
+  api_key: CLOUDINARY_ENV.substring(13,28),
+  api_secret: CLOUDINARY_ENV.substring(29,56)
+});
 
 // Middleware
 app.use(cors());
@@ -180,6 +190,53 @@ app.post('/login', (req, res) => {
       });
     }
   });
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post('/upload', upload.array('media'), async (req, res) => {
+  try {
+    const files = req.files;
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'auto', // Automatically detect image/video
+            folder: 'my-app-media',
+            transformation: [
+              { width: 800, height: 600, crop: 'limit' }, // Resize images
+              { quality: 'auto' } // Auto-optimize quality
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(file.buffer);
+      });
+
+      uploadedFiles.push({
+        public_id: result.public_id,
+        url: result.secure_url,
+        size: result.bytes,
+        type: result.resource_type
+      });
+    }
+
+    res.json({
+      success: true,
+      files: uploadedFiles
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Upload failed'
+    });
+  }
+});
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });
