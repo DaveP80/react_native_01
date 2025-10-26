@@ -4,12 +4,12 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
-
+const Multer = require('multer');
 const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 const CLOUDINARY_ENV = process.env.CLOUDINARY_URL
+import { handleUpload } from './utility/helper';
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: CLOUDINARY_ENV.slice(-9),
@@ -20,6 +20,10 @@ cloudinary.config({
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const storage = new MulterError.memoryStorage();
+
+const upload = Multer({ storage });
 
 // Database setup
 const dbPath = path.join(__dirname, 'database.sqlite');
@@ -190,8 +194,6 @@ app.post('/login', (req, res) => {
       });
     }
   });
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 app.post('/upload', upload.array('media'), async (req, res) => {
   try {
