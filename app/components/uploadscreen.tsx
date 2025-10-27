@@ -201,7 +201,9 @@ const UploaderScreen = () => {
         </Text>
         <Text style={styles.instructionsText}>
           • You can select multiple items at once
-        </Text>
+
+          • In development multi file upload.        
+          </Text>
         <Text style={styles.instructionsText}>
           • Tap the × button to remove individual items
         </Text>
