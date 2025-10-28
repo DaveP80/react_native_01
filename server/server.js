@@ -9,7 +9,7 @@ const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 const CLOUDINARY_ENV = process.env.CLOUDINARY_URL
-import { handleUpload } from './utility/helper';
+const { handleUpload } =  require('./utility/helper');
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: CLOUDINARY_ENV.slice(-9),
@@ -21,7 +21,7 @@ cloudinary.config({
 app.use(cors());
 app.use(express.json());
 
-const storage = new MulterError.memoryStorage();
+const storage = new Multer.memoryStorage();
 
 const upload = Multer({ storage });
 
@@ -201,22 +201,17 @@ app.post('/upload', upload.array('media'), async (req, res) => {
     const uploadedFiles = [];
 
     for (const file of files) {
-      const result = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'auto', // Automatically detect image/video
-            folder: 'my-app-media',
-            transformation: [
-              { width: 800, height: 600, crop: 'limit' }, // Resize images
-              { quality: 'auto' } // Auto-optimize quality
-            ]
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        ).end(file.buffer);
-      });
+      try {
+        const b64 = Buffer.from(file.buffer).toString("base64");
+        let dataURI = "data:" + file.mimetype + ";base64," + b64;
+        const cldRes = await handleUpload(dataURI, cloudinary);
+        returnJSON.push(cldRes);
+      } catch (error) {
+        console.log(error);
+        res.send({
+          message: error.message,
+        });
+      }
 
       uploadedFiles.push({
         public_id: result.public_id,

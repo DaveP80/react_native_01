@@ -85,7 +85,7 @@ const UploaderScreen = () => {
 
     try {
       const formData = new FormData();
-      
+
       selectedMedia.forEach((asset, index) => {
         formData.append(`media_${index}`, {
           uri: asset.uri,
@@ -158,7 +158,7 @@ const UploaderScreen = () => {
                 >
                   <Text style={styles.removeButtonText}>×</Text>
                 </TouchableOpacity>
-                
+
                 {asset.type?.includes('video') ? (
                   <View style={styles.videoPlaceholder}>
                     <Text style={styles.videoText}>🎥 Video</Text>
@@ -202,8 +202,8 @@ const UploaderScreen = () => {
         <Text style={styles.instructionsText}>
           • You can select multiple items at once
 
-          • In development multi file upload.        
-          </Text>
+          • In development multi file upload.
+        </Text>
         <Text style={styles.instructionsText}>
           • Tap the × button to remove individual items
         </Text>
