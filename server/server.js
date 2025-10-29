@@ -199,6 +199,7 @@ app.post('/upload', upload.array('media'), async (req, res) => {
   try {
     const files = req.files;
     const uploadedFiles = [];
+    const returnJSON = [];
 
     for (const file of files) {
       try {
@@ -221,10 +222,20 @@ app.post('/upload', upload.array('media'), async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      files: uploadedFiles
-    });
+    if (returnJSON.length) {
+      res.json({
+        success: true,
+        files: uploadedFiles
+      });
+
+    } else {
+      res.json({
+        success: false,
+        files: [],
+        message: "failed to load uploaded files from frontend."
+      }); 
+    }
+
 
   } catch (error) {
     console.error('Upload error:', error);
