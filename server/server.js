@@ -8,15 +8,6 @@ const Multer = require('multer');
 const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
-const CLOUDINARY_ENV = process.env.CLOUDINARY_URL
-const { handleUpload } =  require('./utility/helper');
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: CLOUDINARY_ENV.slice(-9),
-  api_key: CLOUDINARY_ENV.substring(13,28),
-  api_secret: CLOUDINARY_ENV.substring(29,56)
-});
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -195,56 +186,6 @@ app.post('/login', (req, res) => {
     }
   });
 
-app.post('/upload', upload.array('media'), async (req, res) => {
-  try {
-    const files = req.files;
-    const uploadedFiles = [];
-    const returnJSON = [];
-
-    for (const file of files) {
-      try {
-        const b64 = Buffer.from(file.buffer).toString("base64");
-        let dataURI = "data:" + file.mimetype + ";base64," + b64;
-        const cldRes = await handleUpload(dataURI, cloudinary);
-        returnJSON.push(cldRes);
-      } catch (error) {
-        console.log(error);
-        res.send({
-          message: error.message,
-        });
-      }
-
-      uploadedFiles.push({
-        public_id: result.public_id,
-        url: result.secure_url,
-        size: result.bytes,
-        type: result.resource_type
-      });
-    }
-
-    if (returnJSON.length) {
-      res.json({
-        success: true,
-        files: uploadedFiles
-      });
-
-    } else {
-      res.json({
-        success: false,
-        files: [],
-        message: "failed to load uploaded files from frontend."
-      }); 
-    }
-
-
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Upload failed'
-    });
-  }
-});
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });

@@ -12,200 +12,205 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 
+const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
 const UploaderScreen = () => {
   const router = useRouter();
-  const [selectedMedia, setSelectedMedia] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
-  // Request permissions
-  const requestPermissions = async () => {
+  const requestMediaPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
         'Permission Required',
-        'Sorry, we need camera roll permissions to upload photos and videos!'
+        'We need media library permission to choose a video.'
       );
       return false;
     }
     return true;
   };
 
-  // Pick image from gallery
-  const pickImage = async () => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsMultipleSelection: true,
-      quality: 0.8,
-      allowsEditing: false,
-    });
-
-    if (!result.canceled) {
-      setSelectedMedia(prev => [...prev, ...result.assets]);
-    }
-  };
-
-  // Take photo with camera
-  const takePhoto = async () => {
+  const requestCameraPermissions = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
         'Permission Required',
-        'Sorry, we need camera permissions to take photos!'
+        'We need camera permission to record a video.'
       );
-      return;
+      return false;
     }
+    return true;
+  };
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      quality: 0.8,
+  // Pick a single video from gallery
+  const pickVideo = async () => {
+    const hasPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (hasPermission.status !== 'granted') return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsMultipleSelection: false,
       allowsEditing: false,
+      quality: 0.8,
     });
 
-    if (!result.canceled) {
-      setSelectedMedia(prev => [...prev, ...result.assets]);
+    if (!result.canceled && result.assets?.length) {
+      setSelectedVideo(result.assets[0]);
+      setUploadedUrl(null);
     }
   };
 
-  // Remove selected media
-  const removeMedia = (index: number) => {
-    setSelectedMedia(prev => prev.filter((_, i) => i !== index));
+  // Record a single video using camera
+  const recordVideo = async () => {
+    const hasPermission = await requestCameraPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 0.8,
+      allowsEditing: false,
+      videoMaxDuration: 300, // optional
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      setSelectedVideo(asset);
+      setUploadedUrl(null);
+    }
   };
 
-  // Upload media to server
-  const uploadMedia = async () => {
-    if (selectedMedia.length === 0) {
-      Alert.alert('No Media Selected', 'Please select at least one photo or video to upload.');
+  const clearSelection = () => {
+    setSelectedVideo(null);
+    setUploadedUrl(null);
+  };
+
+  // Upload selected video directly to Cloudinary (unsigned)
+  const uploadVideo = async () => {
+    if (!selectedVideo) {
+      Alert.alert('No Video Selected', 'Please choose or record a video first.');
+      return;
+    }
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+      Alert.alert('Missing Config', 'Please set your Cloudinary cloud name and upload preset.');
       return;
     }
 
     setUploading(true);
-
     try {
+      const asset = selectedVideo;
+
+      let uri = asset.uri;
+      const resp = await fetch(uri);
+      const blob = await resp.blob();
+
+      const maxBytes = 50 * 1024 * 1024; // 50MB example
+      const part = blob.size > maxBytes ? blob.slice(0, maxBytes, blob.type) : blob;
+
+      const mime = asset.mimeType || 'video/mp4';
+      const ext = mime.split('/')[1] || 'mp4';
+      const name = asset.fileName || `video.${ext}`;
+
       const formData = new FormData();
+      formData.append('file', part as any);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-      selectedMedia.forEach((asset, index) => {
-        formData.append(`media_${index}`, {
-          uri: asset.uri,
-          type: asset.type || 'image/jpeg',
-          name: asset.fileName || `media_${index}.${asset.type?.includes('video') ? 'mp4' : 'jpg'}`,
-        } as any);
-      });
+      const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
 
-      const response = await fetch('http://localhost:3000/upload', {
+      const res = await fetch(endpoint, {
         method: 'POST',
-        body: formData,
-
+        body: formData, 
       });
 
-      if (response.ok) {
-        Alert.alert('Success', 'Media uploaded successfully!');
-        setSelectedMedia([]);
-      } else {
-        throw new Error('Upload failed');
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error(`Cloudinary upload failed (${res.status}): ${errText}`);
       }
-    } catch (error) {
-      console.error('Upload error:', error);
-      Alert.alert('Upload Failed', 'There was an error uploading your media. Please try again.');
+
+      const json = await res.json();
+      setUploadedUrl(json.secure_url);
+      Alert.alert('Success', 'Video uploaded to Cloudinary.');
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      Alert.alert('Upload Failed', err?.message || 'Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
-  // Clear all selected media
-  const clearAll = () => {
-    setSelectedMedia([]);
-  };
-
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Media Uploader</Text>
-        <Text style={styles.subtitle}>Upload photos and videos from your device</Text>
+        <Text style={styles.title}>Video Uploader</Text>
+        <Text style={styles.subtitle}>Upload one video to Cloudinary</Text>
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={pickImage}>
-          <Text style={styles.buttonText}>📁 Choose from Gallery</Text>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.button} onPress={pickVideo}>
+          <Text style={styles.buttonText}>📁 Choose Video</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={takePhoto}>
-          <Text style={styles.buttonText}>📷 Take Photo/Video</Text>
+        <TouchableOpacity style={styles.button} onPress={recordVideo}>
+          <Text style={styles.buttonText}>🎥 Record Video</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Selected Media Preview */}
-      {selectedMedia.length > 0 && (
-        <View style={styles.previewContainer}>
+      {selectedVideo && (
+        <View style={styles.previewCard}>
           <View style={styles.previewHeader}>
-            <Text style={styles.previewTitle}>
-              Selected Media ({selectedMedia.length})
-            </Text>
-            <TouchableOpacity onPress={clearAll}>
-              <Text style={styles.clearButton}>Clear All</Text>
+            <Text style={styles.previewTitle}>Selected Video</Text>
+            <TouchableOpacity onPress={clearSelection}>
+              <Text style={styles.clearButton}>Clear</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {selectedMedia.map((asset, index) => (
-              <View key={index} style={styles.mediaItem}>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => removeMedia(index)}
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-
-                {asset.type?.includes('video') ? (
-                  <View style={styles.videoPlaceholder}>
-                    <Text style={styles.videoText}>🎥 Video</Text>
-                    <Text style={styles.fileName}>{asset.fileName || 'video.mp4'}</Text>
-                  </View>
-                ) : (
-                  <Image source={{ uri: asset.uri }} style={styles.previewImage} />
-                )}
-              </View>
-            ))}
-          </ScrollView>
+          <View style={styles.videoPlaceholder}>
+            <Text style={styles.videoIcon}>🎞️</Text>
+            <Text style={styles.fileName}>
+              {selectedVideo.fileName || 'video.mp4'}
+            </Text>
+            <Text style={styles.fileMeta}>
+              {Math.round((selectedVideo.fileSize || 0) / (1024 * 1024))} MB
+            </Text>
+          </View>
         </View>
       )}
 
-      {/* Upload Button */}
-      {selectedMedia.length > 0 && (
+      {selectedVideo && (
         <TouchableOpacity
           style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
-          onPress={uploadMedia}
+          onPress={uploadVideo}
           disabled={uploading}
         >
           {uploading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.uploadButtonText}>
-              Upload {selectedMedia.length} item{selectedMedia.length > 1 ? 's' : ''}
-            </Text>
+            <Text style={styles.uploadButtonText}>Upload Video</Text>
           )}
         </TouchableOpacity>
       )}
 
-      {/* Instructions */}
-      <View style={styles.instructionsContainer}>
-        <Text style={styles.instructionsTitle}>How to use:</Text>
-        <Text style={styles.instructionsText}>
-          • Tap "Choose from Gallery" to select photos/videos from your device
-        </Text>
-        <Text style={styles.instructionsText}>
-          • Tap "Take Photo/Video" to capture new media with your camera
-        </Text>
-        <Text style={styles.instructionsText}>
-          • You can select multiple items at once
+      {uploadedUrl && (
+        <View style={styles.resultCard}>
+          <Text style={styles.resultTitle}>Uploaded URL</Text>
+          <Text style={styles.resultUrl} numberOfLines={2}>
+            {uploadedUrl}
+          </Text>
+        </View>
+      )}
 
-          • In development multi file upload.
+      <View style={styles.instructionsCard}>
+        <Text style={styles.instructionsTitle}>Notes</Text>
+        <Text style={styles.instructionsText}>
+          • This screen uploads one video at a time to Cloudinary.
         </Text>
         <Text style={styles.instructionsText}>
-          • Tap the × button to remove individual items
+          • Configure `CLOUDINARY_CLOUD_NAME` and `CLOUDINARY_UPLOAD_PRESET` above.
+        </Text>
+        <Text style={styles.instructionsText}>
+          • Uses unsigned upload; consider signed uploads for production.
         </Text>
       </View>
     </ScrollView>
@@ -233,7 +238,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  buttonContainer: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 30,
@@ -251,7 +256,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  previewContainer: {
+  previewCard: {
     backgroundColor: '#fff',
     borderRadius: 15,
     padding: 15,
@@ -278,55 +283,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  mediaItem: {
-    marginRight: 15,
-    position: 'relative',
-  },
-  removeButton: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  previewImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-  },
   videoPlaceholder: {
-    width: 100,
-    height: 100,
+    height: 120,
     backgroundColor: '#E5E5E7',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  videoText: {
-    fontSize: 20,
-    marginBottom: 5,
-  },
+  videoIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  } as any,
   fileName: {
+    fontSize: 14,
+    color: '#333',
+  },
+  fileMeta: {
     fontSize: 12,
     color: '#666',
-    textAlign: 'center',
+    marginTop: 4,
   },
   uploadButton: {
     backgroundColor: '#34C759',
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   uploadButtonDisabled: {
     backgroundColor: '#A0A0A0',
@@ -336,7 +318,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  instructionsContainer: {
+  resultCard: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 20,
+  },
+  resultTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  resultUrl: {
+    fontSize: 12,
+    color: '#007AFF',
+  },
+  instructionsCard: {
     backgroundColor: '#fff',
     borderRadius: 15,
     padding: 20,
