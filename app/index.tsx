@@ -26,7 +26,7 @@ export default function HomeScreen() {
       <TouchableOpacity style={styles.button} onPress={handlePress}>
         { user.name ? 
         
-        <Text style={styles.buttonText}>Add your media.</Text>
+        <Text style={styles.buttonText}>Add your video files to cloudinary!</Text>
         
         : 
         
