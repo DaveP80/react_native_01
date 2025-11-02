@@ -186,6 +186,29 @@ app.post('/login', (req, res) => {
     }
   });
 
+// Add this endpoint to your server.js file
+app.get('/api/media', async (req, res) => {
+  try {
+    // List all resources from Cloudinary (videos)
+    const result = await cloudinary.api.resources({
+      type: 'upload',
+      resource_type: 'video',
+      max_results: 50, // Adjust as needed
+    });
+
+    res.json({
+      success: true,
+      resources: result.resources,
+    });
+  } catch (error) {
+    console.error('Error fetching media:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch media',
+      error: error.message,
+    });
+  }
+});
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });
