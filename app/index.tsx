@@ -13,6 +13,11 @@ export default function HomeScreen() {
       alert('Welcome to React Native! 🎉');
     }
   };
+  const handlePressMedia = () => {
+    if (user.name) {
+        router.push("/mymedia");
+    }
+  };
 
   const {user} = useAuth();
   const router = useRouter();
@@ -31,6 +36,16 @@ export default function HomeScreen() {
         : 
         
         <Text style={styles.buttonText}>Will update on more development!</Text>
+        }
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handlePressMedia}>
+        { user.name ? 
+        
+        <Text style={styles.buttonText}>{user.name}</Text>
+        
+        : 
+        
+        <div></div>
         }
       </TouchableOpacity>
       

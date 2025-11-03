@@ -49,6 +49,31 @@ function createUsersTable() {
   });
 }
 
+function createMediaTable() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      cloudinary_public_id TEXT NOT NULL,
+      cloudinary_url TEXT NOT NULL,
+      file_name TEXT,
+      file_size INTEGER,
+      duration REAL,
+      format TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `;
+  
+  db.run(createTableQuery, (err) => {
+    if (err) {
+      console.error('Error creating media table:', err.message);
+    } else {
+      console.log('Media table ready');
+    }
+  });
+}
+
 // Signup endpoint
 app.post('/signup', async (req, res) => {
   try {
