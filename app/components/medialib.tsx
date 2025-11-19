@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Video } from 'expo-av';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -32,6 +33,8 @@ const MediaLibrary = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
+  const {user} = useAuth();
 
   const fetchMedia = async () => {
     try {
@@ -129,7 +132,9 @@ const MediaLibrary = () => {
                 <TouchableOpacity
                   onPress={() =>
                     setSelectedVideo(
-                      selectedVideo === item.secure_url ? null : item.secure_url
+                      selectedVideo === item.secure_url
+                        ? null
+                        : item.secure_url,
                     )
                   }
                 >
@@ -312,3 +317,4 @@ const styles = StyleSheet.create({
 });
 
 export default MediaLibrary;
+

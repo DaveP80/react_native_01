@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 
 const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -20,6 +21,7 @@ const UploaderScreen = () => {
   const [selectedVideo, setSelectedVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const {user} = useAuth();
 
   const requestMediaPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -130,8 +132,23 @@ const UploaderScreen = () => {
       }
 
       const json = await res.json();
-      setUploadedUrl(json.secure_url);
-      Alert.alert('Success', 'Video uploaded to Cloudinary.');
+      if (json.success) { 
+        setUploadedUrl(json.secure_url);
+        Alert.alert('Success', 'Video uploaded to Cloudinary.');
+        try {
+          const response = await fetch('http://localhost:3000/user_saved_media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: json.secure_url, user_id: user.id, file_name: json.public_id }),
+          });
+          if (!response.ok) {
+            throw new Error('Failed to upload user data');
+          }
+        } catch (err: any) {
+          console.error('Upload user data error:', err);
+        }
+
+      }
     } catch (err: any) {
       console.error('Upload error:', err);
       Alert.alert('Upload Failed', err?.message || 'Please try again.');

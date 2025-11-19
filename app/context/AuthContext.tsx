@@ -12,6 +12,7 @@ type User = {
   name: string;
   email: string;
   password: string;
+  id: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,12 +22,12 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [newUser, setNewUser] = useState<boolean>(false);
 
   const login = (userObj: User) => setUser(userObj);
-  const logout = () => setUser({ name: '', email: '', password: '' });
+  const logout = () => setUser({ name: '', email: '', password: '', id: '' });
   const newSignup = (newValue: boolean) => setNewUser(newValue);
   return (
     <AuthContext.Provider
       value={{
-        user: (user ?? { name: '', email: '', password: '' }),
+        user: (user ?? { name: '', email: '', password: '', id: '' }),
         login,
         logout,
         newSignup,

@@ -20,11 +20,12 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       const res = await response.json();
-      const storeData: User = {name: '', email: '', password: ''};
+      const storeData: User = {name: '', email: '', password: '', id: ''};
       if (response.ok) {
         storeData.email = res.user.email;
         storeData.name = res.user.username;
         storeData.password = "********";
+        storeData.id = res.user.id;
         login(storeData);
       } else {
         Alert.alert('Login failed', 'Invalid credentials');
