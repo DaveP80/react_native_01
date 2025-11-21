@@ -12,7 +12,7 @@ type User = {
   name: string;
   email: string;
   password: string;
-  id: string;
+  id: string | number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

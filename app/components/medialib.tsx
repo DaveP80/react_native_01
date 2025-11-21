@@ -38,12 +38,12 @@ const MediaLibrary = () => {
 
   const fetchMedia = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/media`);
+      const response = await fetch(`${API_BASE_URL}/get_user_saved_media?user_id=${user.id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch media');
       }
       const data = await response.json();
-      setMedia(data.resources || []);
+      setMedia(data.media);
     } catch (error: any) {
       console.error('Error fetching media:', error);
       Alert.alert('Error', 'Failed to load your media. Please try again.');
@@ -149,7 +149,6 @@ const MediaLibrary = () => {
                     source={{ uri: item.secure_url }}
                     style={styles.videoPlayer}
                     useNativeControls
-                    resizeMode="contain"
                   />
                 )}
 

@@ -17,12 +17,11 @@ const CLOUDINARY_CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 const UploaderScreen = () => {
-  const router = useRouter();
   const [selectedVideo, setSelectedVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-  const {user} = useAuth();
 
+  const {user} = useAuth();
   const requestMediaPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -87,10 +86,10 @@ const UploaderScreen = () => {
   const clearSelection = () => {
     setSelectedVideo(null);
     setUploadedUrl(null);
-  };
+  }
 
   // Upload selected video directly to Cloudinary (unsigned)
-  const uploadVideo = async () => {
+  const uploadVideo = async (user_id: string | number) => {
     if (!selectedVideo) {
       Alert.alert('No Video Selected', 'Please choose or record a video first.');
       return;
@@ -132,14 +131,14 @@ const UploaderScreen = () => {
       }
 
       const json = await res.json();
-      if (json.success) { 
+      if (res.ok) {
         setUploadedUrl(json.secure_url);
         Alert.alert('Success', 'Video uploaded to Cloudinary.');
         try {
           const response = await fetch('http://localhost:3000/user_saved_media', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: json.secure_url, user_id: user.id, file_name: json.public_id }),
+            body: JSON.stringify({ url: json.secure_url, user_id: user_id, public_id: json.public_id, created_at: json.created_at, resource_type: json.resource_type, duration: json.duration, bytes: json.bytes, width: json.width, height: json.height, format: json.format }),
           });
           if (!response.ok) {
             throw new Error('Failed to upload user data');
@@ -198,7 +197,7 @@ const UploaderScreen = () => {
       {selectedVideo && (
         <TouchableOpacity
           style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
-          onPress={uploadVideo}
+          onPress={() => uploadVideo(user?.id)}
           disabled={uploading}
         >
           {uploading ? (

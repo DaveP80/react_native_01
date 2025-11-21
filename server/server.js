@@ -3,18 +3,12 @@ const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const cloudinary = require('cloudinary').v2;
-const Multer = require('multer');
 const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-const storage = new Multer.memoryStorage();
-
-const upload = Multer({ storage });
 
 // Database setup
 const dbPath = path.join(__dirname, 'database.sqlite');
@@ -25,6 +19,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.log('Connected to SQLite database');
     // Create users table if it doesn't exist
     createUsersTable();
+    createMediaTable();
   }
 });
 
@@ -56,10 +51,12 @@ function createMediaTable() {
       user_id INTEGER NOT NULL,
       cloudinary_public_id TEXT NOT NULL,
       cloudinary_url TEXT NOT NULL,
-      file_name TEXT,
-      file_size INTEGER,
-      duration REAL,
+      resource_type TEXT,
       format TEXT,
+      duration REAL,
+      bytes INTEGER,
+      width INTEGER,
+      height INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
@@ -212,25 +209,110 @@ app.post('/login', (req, res) => {
   });
 
 // Add this endpoint to your server.js file
-app.get('/api/media', async (req, res) => {
+app.post('/user_saved_media', (req, res) => {
   try {
-    // List all resources from Cloudinary (videos)
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      resource_type: 'video',
-      max_results: 50, // Adjust as needed
+    const { url, user_id, public_id, created_at, resource_type, duration, bytes, width, height, format } = req.body;
+    // Validate required fields
+    if (!url || !user_id || !public_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'url, user_id, and file_name are required'
+      });
+    }
+    // Insert media into database
+    // Mapping: url -> cloudinary_url, file_name -> cloudinary_public_id, bytes -> file_size
+    const insertQuery = `
+      INSERT INTO media (user_id, cloudinary_public_id, cloudinary_url, bytes, duration, format, resource_type, created_at, width, height)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+    db.run(insertQuery, [
+      user_id,
+      public_id, 
+      url,       // This is the secure_url from Cloudinary
+      bytes || null,
+      duration || null,
+      format || null,
+      resource_type || null,
+      created_at,
+      width,
+      height
+    ], function(err) {
+      if (err) {
+        console.error('Database error:', err.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to save media',
+          error: err.message
+        });
+      }
+      
+      res.status(201).json({
+        success: true,
+        message: 'Media saved successfully',
+        mediaId: this.lastID
+      });
     });
-
-    res.json({
-      success: true,
-      resources: result.resources,
-    });
+    
   } catch (error) {
-    console.error('Error fetching media:', error);
+    console.error('Save media error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch media',
-      error: error.message,
+      message: 'Internal server error'
+    });
+  }
+});
+
+app.get('/get_user_saved_media', (req, res) => {
+  try {
+    const { user_id } = req.query;
+    
+    // Validate user_id
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'user_id is required'
+      });
+    }
+    // Query database for user's media
+    const selectQuery = `
+      SELECT 
+        user_id,
+        cloudinary_public_id as public_id,
+        cloudinary_url as secure_url,
+        resource_type,
+        format,
+        duration,
+        bytes,
+        width,
+        height,
+        created_at
+      FROM media 
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+    `;
+    
+    db.all(selectQuery, [user_id], (err, rows) => {
+      if (err) {
+        console.error('Database error:', err.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to fetch media',
+          error: err.message
+        });
+      }
+      
+      res.status(200).json({
+        success: true,
+        media: rows || []
+      });
+    });
+    
+  } catch (error) {
+    console.error('Get media error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
     });
   }
 });
@@ -245,7 +327,6 @@ app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`Signup endpoint: http://localhost:${PORT}/signup`);
 });
-
 // Graceful shutdown
 process.on('SIGINT', () => {
   db.close((err) => {
